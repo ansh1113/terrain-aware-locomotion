@@ -1,0 +1,362 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="anymal_simple">
+
+  <!-- Constants -->
+  <xacro:property name="body_length" value="0.6"/>
+  <xacro:property name="body_width" value="0.4"/>
+  <xacro:property name="body_height" value="0.15"/>
+  <xacro:property name="leg_length" value="0.35"/>
+  <xacro:property name="foot_radius" value="0.03"/>
+
+  <!-- Materials -->
+  <material name="body_color">
+    <color rgba="0.8 0.8 0.8 1.0"/>
+  </material>
+  
+  <material name="leg_color">
+    <color rgba="0.2 0.2 0.2 1.0"/>
+  </material>
+
+  <!-- Base link -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="${body_length} ${body_width} ${body_height}"/>
+      </geometry>
+      <material name="body_color"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${body_length} ${body_width} ${body_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="30.0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <!-- Leg macro -->
+  <xacro:macro name="leg" params="name x y">
+    
+    <!-- Hip joint (HAA - Hip Abduction/Adduction) -->
+    <joint name="${name}_haa_joint" type="revolute">
+      <parent link="base_link"/>
+      <child link="${name}_hip_link"/>
+      <origin xyz="${x} ${y} 0" rpy="0 0 0"/>
+      <axis xyz="1 0 0"/>
+      <limit lower="-0.5" upper="0.5" effort="100" velocity="10"/>
+    </joint>
+
+    <link name="${name}_hip_link">
+      <visual>
+        <geometry>
+          <cylinder radius="0.05" length="0.1"/>
+        </geometry>
+        <material name="leg_color"/>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder radius="0.05" length="0.1"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="2.0"/>
+        <inertia ixx="0.1" ixy="0.0" ixz="0.0" iyy="0.1" iyz="0.0" izz="0.1"/>
+      </inertial>
+    </link>
+
+    <!-- Hip flexion joint (HFE - Hip Flexion/Extension) -->
+    <joint name="${name}_hfe_joint" type="revolute">
+      <parent link="${name}_hip_link"/>
+      <child link="${name}_upper_leg_link"/>
+      <origin xyz="0 0 -0.05" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.5" upper="1.5" effort="100" velocity="10"/>
+    </joint>
+
+    <link name="${name}_upper_leg_link">
+      <visual>
+        <origin xyz="0 0 -${leg_length/2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.03" length="${leg_length}"/>
+        </geometry>
+        <material name="leg_color"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 -${leg_length/2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.03" length="${leg_length}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 0 -${leg_length/2}" rpy="0 0 0"/>
+        <mass value="1.5"/>
+        <inertia ixx="0.1" ixy="0.0" ixz="0.0" iyy="0.1" iyz="0.0" izz="0.01"/>
+      </inertial>
+    </link>
+
+    <!-- Knee joint (KFE - Knee Flexion/Extension) -->
+    <joint name="${name}_kfe_joint" type="revolute">
+      <parent link="${name}_upper_leg_link"/>
+      <child link="${name}_lower_leg_link"/>
+      <origin xyz="0 0 -${leg_length}" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-2.5" upper="0.5" effort="100" velocity="10"/>
+    </joint>
+
+    <link name="${name}_lower_leg_link">
+      <visual>
+        <origin xyz="0 0 -${leg_length/2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.02" length="${leg_length}"/>
+        </geometry>
+        <material name="leg_color"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 -${leg_length/2}" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.02" length="${leg_length}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 0 -${leg_length/2}" rpy="0 0 0"/>
+        <mass value="1.0"/>
+        <inertia ixx="0.05" ixy="0.0" ixz="0.0" iyy="0.05" iyz="0.0" izz="0.005"/>
+      </inertial>
+    </link>
+
+    <!-- Foot -->
+    <link name="${name}_foot_link">
+      <visual>
+        <geometry>
+          <sphere radius="${foot_radius}"/>
+        </geometry>
+        <material name="leg_color"/>
+      </visual>
+      <collision>
+        <geometry>
+          <sphere radius="${foot_radius}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+      </inertial>
+    </link>
+
+    <joint name="${name}_foot_joint" type="fixed">
+      <parent link="${name}_lower_leg_link"/>
+      <child link="${name}_foot_link"/>
+      <origin xyz="0 0 -${leg_length}" rpy="0 0 0"/>
+    </joint>
+
+  </xacro:macro>
+
+  <!-- Create all four legs -->
+  <xacro:leg name="lf" x="${body_length/2}" y="${body_width/2}"/>
+  <xacro:leg name="rf" x="${body_length/2}" y="-${body_width/2}"/>
+  <xacro:leg name="lh" x="-${body_length/2}" y="${body_width/2}"/>
+  <xacro:leg name="rh" x="-${body_length/2}" y="-${body_width/2}"/>
+
+  <!-- Camera sensor -->
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+      <material name="body_color"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="${body_length/2} 0 ${body_height/2 + 0.05}" rpy="0 0.3 0"/>
+  </joint>
+
+  <!-- Camera sensor plugin -->
+  <gazebo reference="camera_link">
+    <sensor type="camera" name="camera">
+      <update_rate>30.0</update_rate>
+      <camera name="head">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>camera</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>camera_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- Depth camera -->
+  <link name="camera_depth_link">
+    <visual>
+      <geometry>
+        <box size="0.03 0.03 0.03"/>
+      </geometry>
+      <material name="body_color"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.03 0.03 0.03"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="0.0005" ixy="0.0" ixz="0.0" iyy="0.0005" iyz="0.0" izz="0.0005"/>
+    </inertial>
+  </link>
+
+  <joint name="camera_depth_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_depth_link"/>
+    <origin xyz="${body_length/2} 0.03 ${body_height/2 + 0.05}" rpy="0 0.3 0"/>
+  </joint>
+
+  <!-- Depth camera sensor plugin -->
+  <gazebo reference="camera_depth_link">
+    <sensor type="depth" name="depth_camera">
+      <update_rate>30.0</update_rate>
+      <camera name="depth">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>10</far>
+        </clip>
+      </camera>
+      <plugin name="depth_camera_controller" filename="libgazebo_ros_openni_kinect.so">
+        <baseline>0.2</baseline>
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>camera</cameraName>
+        <imageTopicName>rgb/image_raw</imageTopicName>
+        <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
+        <depthImageTopicName>depth/image_raw</depthImageTopicName>
+        <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
+        <pointCloudTopicName>depth/points</pointCloudTopicName>
+        <frameName>camera_depth_optical_frame</frameName>
+        <pointCloudCutoff>0.5</pointCloudCutoff>
+        <pointCloudCutoffMax>3.0</pointCloudCutoffMax>
+        <distortionK1>0</distortionK1>
+        <distortionK2>0</distortionK2>
+        <distortionK3>0</distortionK3>
+        <distortionT1>0</distortionT1>
+        <distortionT2>0</distortionT2>
+        <CxPrime>0</CxPrime>
+        <Cx>0</Cx>
+        <Cy>0</Cy>
+        <focalLength>0</focalLength>
+        <hackBaseline>0</hackBaseline>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- Additional optical frame -->
+  <link name="camera_depth_optical_frame"/>
+  <joint name="camera_depth_optical_joint" type="fixed">
+    <parent link="camera_depth_link"/>
+    <child link="camera_depth_optical_frame"/>
+    <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+  </joint>
+
+  <gazebo>
+  <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+    <parameters>$(find terrain_description)/config/anymal_controllers.yaml</parameters>
+  </plugin>
+  </gazebo>
+
+  <ros2_control name="GazeboSystem" type="system">
+  <hardware>
+    <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+  </hardware>
+  <joint name="lf_haa_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="lf_hfe_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="lf_kfe_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="rf_haa_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="rf_hfe_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="rf_kfe_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="lh_haa_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="lh_hfe_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="lh_kfe_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="rh_haa_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="rh_hfe_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="rh_kfe_joint">
+    <command_interface name="position"/>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+</ros2_control>
+
+</robot>

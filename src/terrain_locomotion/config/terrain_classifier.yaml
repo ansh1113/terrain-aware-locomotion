@@ -1,0 +1,17 @@
+# File: ~/terrain_locomotion_ws/src/terrain_locomotion/config/terrain_classifier.yaml
+
+terrain_classifier:
+  ros__parameters:
+    confidence_threshold: 0.8
+    model_path: ""  # Path to trained model, empty for demo mode
+    image_topic: "/camera/image_raw"
+    classification_rate: 5.0  # Hz
+    
+    # CNN parameters
+    input_size: [224, 224]
+    num_classes: 4
+    class_names: ["flat", "slope", "rubble", "stairs"]
+    
+    # Preprocessing
+    normalize_mean: [0.485, 0.456, 0.406]
+    normalize_std: [0.229, 0.224, 0.225]

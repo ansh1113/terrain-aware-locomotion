@@ -1,0 +1,30 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100 # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+joint_trajectory_controller:
+  ros__parameters:
+    joints:
+      - lf_haa_joint
+      - lf_hfe_joint
+      - lf_kfe_joint
+      - rf_haa_joint
+      - rf_hfe_joint
+      - rf_kfe_joint
+      - lh_haa_joint
+      - lh_hfe_joint
+      - lh_kfe_joint
+      - rh_haa_joint
+      - rh_hfe_joint
+      - rh_kfe_joint
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity

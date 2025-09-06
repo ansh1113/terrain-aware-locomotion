@@ -1,0 +1,36 @@
+# File: ~/terrain_locomotion_ws/src/terrain_locomotion/config/gait_controller.yaml
+
+gait_controller:
+  ros__parameters:
+    # Control gains
+    kp: 50.0                     # Proportional gain
+    kd: 5.0                      # Derivative gain
+    
+    # Safety limits
+    max_joint_velocity: 10.0     # rad/s
+    max_joint_torque: 80.0       # Nm
+    
+    # Joint names (ANYmal convention)
+    joint_names:
+      - "lf_haa_joint"           # Left Front Hip Abduction/Adduction
+      - "lf_hfe_joint"           # Left Front Hip Flexion/Extension
+      - "lf_kfe_joint"           # Left Front Knee Flexion/Extension
+      - "rf_haa_joint"           # Right Front Hip Abduction/Adduction
+      - "rf_hfe_joint"           # Right Front Hip Flexion/Extension
+      - "rf_kfe_joint"           # Right Front Knee Flexion/Extension
+      - "lh_haa_joint"           # Left Hind Hip Abduction/Adduction
+      - "lh_hfe_joint"           # Left Hind Hip Flexion/Extension
+      - "lh_kfe_joint"           # Left Hind Knee Flexion/Extension
+      - "rh_haa_joint"           # Right Hind Hip Abduction/Adduction
+      - "rh_hfe_joint"           # Right Hind Hip Flexion/Extension
+      - "rh_kfe_joint"           # Right Hind Knee Flexion/Extension
+    
+    # Terrain-specific control adjustments
+    terrain_torque_factors:
+      flat: 1.0
+      slope: 1.2                 # Higher torques for slopes
+      rubble: 1.5                # Much higher for rough terrain
+      stairs: 1.3                # Moderate increase for stairs
+    
+    # Control frequency
+    control_frequency: 100.0     # Hz

@@ -1,0 +1,46 @@
+# File: ~/terrain_locomotion_ws/src/terrain_locomotion/config/footstep_planner.yaml
+
+footstep_planner:
+  ros__parameters:
+    # Planning parameters
+    confidence_threshold: 0.8
+    planning_frequency: 5.0      # Hz
+    
+    # Robot dimensions (ANYmal-like)
+    robot:
+      body_length: 0.6           # meters
+      body_width: 0.4
+      default_step_length: 0.3
+      default_step_height: 0.05
+      default_step_duration: 0.5
+    
+    # Terrain adaptations
+    terrain_params:
+      flat:
+        step_length_factor: 1.0
+        step_height_factor: 1.0
+        step_duration_factor: 1.0
+        stance_width_factor: 1.0
+      
+      slope:
+        step_length_factor: 0.7    # Shorter steps
+        step_height_factor: 1.2    # Higher clearance
+        step_duration_factor: 1.3  # Slower gait
+        stance_width_factor: 1.2   # Wider stance
+      
+      rubble:
+        step_length_factor: 0.5    # Very short steps
+        step_height_factor: 2.0    # High clearance
+        step_duration_factor: 1.8  # Much slower
+        stance_width_factor: 1.3   # Wide stance
+      
+      stairs:
+        step_length_factor: 0.4    # Precise steps
+        step_height_factor: 1.5    # Moderate clearance
+        step_duration_factor: 2.0  # Very slow
+        stance_width_factor: 1.1   # Slightly wider
+    
+    # Safety parameters
+    max_step_length: 0.5
+    max_step_height: 0.15
+    min_stance_time: 0.2

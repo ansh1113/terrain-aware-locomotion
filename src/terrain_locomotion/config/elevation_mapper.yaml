@@ -1,0 +1,24 @@
+# File: ~/terrain_locomotion_ws/src/terrain_locomotion/config/elevation_mapper.yaml
+
+elevation_mapper:
+  ros__parameters:
+    # Grid parameters
+    map_size: 200           # Grid size (200x200 cells)
+    resolution: 0.05        # 5cm per cell
+    max_range: 5.0          # Maximum depth range (m)
+    min_range: 0.1          # Minimum depth range (m)
+    
+    # Camera parameters (adjust for your camera)
+    camera:
+      fx: 525.0             # Focal length x
+      fy: 525.0             # Focal length y  
+      cx: 320.0             # Principal point x
+      cy: 240.0             # Principal point y
+    
+    # Topics
+    depth_topic: "/camera/depth/image_raw"
+    camera_frame: "camera_depth_optical_frame"
+    base_frame: "base_link"
+    
+    # Update rate
+    map_update_rate: 5.0    # Hz
