@@ -2,7 +2,6 @@
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![ROS2](https://img.shields.io/badge/ROS2-Humble-blue.svg)](https://docs.ros.org/en/humble/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![MoveIt2](https://img.shields.io/badge/MoveIt2-Latest-orange.svg)](https://moveit.ros.org/)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/ansh1113/terrain-aware-locomotion/graphs/commit-activity)
 
