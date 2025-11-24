@@ -1,16 +1,16 @@
 # Terrain-Aware Locomotion Pipeline
 
-## 🦾 Project Overview
+## Project Overview
 
 A comprehensive robotics pipeline that enables quadruped robots (ANYmal C or Unitree A1) to autonomously navigate diverse terrains using perception-based footstep planning.
 
 ### Industry Relevance
 This pipeline addresses the same perception-to-footstep planning challenges that ANYbotics solves for their inspection robots in industrial environments. The system combines elevation mapping with CNN-based terrain classification to enable adaptive gait planning, essential for robots operating in unstructured environments like construction sites, mines, and disaster zones.
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-📷 RGB/Depth Camera → 🗺️ Elevation Mapping → 🧠 CNN Classifier → 👣 Footstep Planner → 🤖 Robot Control
+RGB/Depth Camera → Elevation Mapping → CNN Classifier → Footstep Planner → Robot Control
 ```
 
 ### Pipeline Components
@@ -29,12 +29,6 @@ This pipeline addresses the same perception-to-footstep planning challenges that
    - Gait execution
    - Joint trajectory control
    - Safety monitoring
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Ubuntu 22.04 with ROS2 Humble
-- GPU recommended for Isaac Sim (fallback to Gazebo)
 
 ### Installation
 
@@ -61,7 +55,7 @@ ros2 run terrain_perception terrain_classifier_node
 ros2 launch terrain_planning footstep_planner.launch.py
 ```
 
-## 🎯 Terrain Classification
+## Terrain Classification
 
 The CNN classifier categorizes terrain into four classes:
 
@@ -72,17 +66,16 @@ The CNN classifier categorizes terrain into four classes:
 | **Rubble** | Higher foot clearance, careful placement |
 | **Stairs** | Discrete step targets, precise foot placement |
 
-## 📊 Performance Metrics
+## Performance Metrics
 
 - **Classification Accuracy**: >95% on synthetic terrain datasets
 - **Planning Success Rate**: >90% across different terrains  
 - **Real-time Performance**: 10Hz perception + planning loop
 
-## 🎬 Demo Video
+## Demo Video
 
-[Link to demonstration video showing robot traversing different terrains with overlay of terrain classifications and planned footsteps]
 
-## 📚 Technical Details
+## Technical Details
 
 ### Elevation Mapping
 - Uses ETH Zürich's `elevation_mapping_cupy` for real-time terrain reconstruction
@@ -99,14 +92,14 @@ The CNN classifier categorizes terrain into four classes:
 - Generates terrain-aware contact sequences
 - Optimizes for stability and energy efficiency
 
-## 🔧 Configuration
+## Configuration
 
 Key parameters in `config/`:
 - `terrain_classifier.yaml`: CNN model parameters
 - `footstep_planner.yaml`: Gait adaptation settings  
 - `robot_params.yaml`: ANYmal/A1 specific configurations
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Unit tests
@@ -116,15 +109,15 @@ colcon test
 ros2 launch terrain_simulation test_pipeline.launch.py
 ```
 
-## 📈 Future Work
+## Future Work
 
 ### Stretch Goals Implemented
-- ✅ Uncertainty handling: Planner adapts when classification confidence < 80%
-- ✅ Sensor fusion: Depth + IMU for improved terrain understanding
-- 🔄 Dynamic obstacle avoidance
-- 🔄 Multi-robot coordination
+- Uncertainty handling: Planner adapts when classification confidence < 80%
+- Sensor fusion: Depth + IMU for improved terrain understanding
+- Dynamic obstacle avoidance
+- Multi-robot coordination
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/new-terrain-type`)
@@ -132,11 +125,11 @@ ros2 launch terrain_simulation test_pipeline.launch.py
 4. Push to branch (`git push origin feature/new-terrain-type`)  
 5. Create Pull Request
 
-## 📝 License
+## License
 
 MIT License - see `LICENSE` file for details.
 
-## 🏆 Acknowledgments
+## Acknowledgments
 
 - ETH Zürich for ANYmal robot model and elevation mapping
 - ANYbotics for inspiration from their commercial systems
