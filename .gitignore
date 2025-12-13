@@ -1,5 +1,58 @@
+# ROS2 build artifacts
 build/
 install/
 log/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+
+# Virtual environments
 .venv/
+venv/
+ENV/
+env/
+
+# IDEs
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# PyTorch models
+*.pth
+*.pt
+models/*.pth
+models/*.pt
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# Documentation builds
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Temporary files
+*.bak
+*.tmp
+.cache/
+
+# OS files
+Thumbs.db
+

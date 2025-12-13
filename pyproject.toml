@@ -1,0 +1,92 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "terrain-locomotion"
+version = "0.0.1"
+description = "Terrain-aware locomotion pipeline for quadruped robots"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Ansh Bhansali", email = "anshbhansali5@gmail.com"}
+]
+keywords = ["robotics", "quadruped", "locomotion", "terrain", "ros2"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Robotics",
+]
+
+dependencies = [
+    "numpy>=1.21.0",
+    "opencv-python>=4.5.0",
+    "torch>=1.9.0",
+    "torchvision>=0.10.0",
+    "scipy>=1.7.0",
+    "transforms3d>=0.3.1",
+    "PyYAML>=5.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.2.0",
+    "pytest-cov>=2.12.0",
+    "flake8>=3.9.0",
+    "black>=21.6b0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ansh1113/terrain-aware-locomotion"
+Repository = "https://github.com/ansh1113/terrain-aware-locomotion"
+Issues = "https://github.com/ansh1113/terrain-aware-locomotion/issues"
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+  | install
+  | log
+)/
+'''
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --cov=src/terrain_locomotion/terrain_locomotion"
+testpaths = [
+    "src/terrain_locomotion/test",
+]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+[tool.coverage.run]
+source = ["src/terrain_locomotion/terrain_locomotion"]
+omit = ["*/test/*", "*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
