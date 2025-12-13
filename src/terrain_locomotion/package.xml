@@ -4,7 +4,7 @@
   <name>terrain_locomotion</name>
   <version>0.0.1</version>
   <description>Terrain-aware locomotion pipeline for quadruped robots</description>
-  <maintainer email="anshbhansali5@gmail.com">your_name</maintainer>
+  <maintainer email="anshbhansali5@gmail.com">Ansh Bhansali</maintainer>
   <license>MIT</license>
 
   <depend>rclpy</depend>

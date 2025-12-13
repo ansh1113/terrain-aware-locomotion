@@ -1,4 +1,4 @@
-# File: ~/terrain_locomotion_ws/src/terrain_locomotion/terrain_locomotion/perception/terrain_classifier.py
+"""Terrain classifier node with CNN-based and feature-based classification."""
 
 import rclpy
 from rclpy.node import Node
@@ -11,49 +11,23 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 from PIL import Image as PILImage
-import json
+import os
 
-class TerrainCNN(nn.Module):
-    """Simple CNN for terrain classification"""
-    def __init__(self, num_classes=4):
-        super(TerrainCNN, self).__init__()
-        self.features = nn.Sequential(
-            # First conv block
-            nn.Conv2d(3, 32, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(2, 2),
-            
-            # Second conv block
-            nn.Conv2d(32, 64, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(2, 2),
-            
-            # Third conv block
-            nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(2, 2),
-            
-            # Fourth conv block
-            nn.Conv2d(128, 256, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.AdaptiveAvgPool2d((4, 4))
-        )
-        
-        self.classifier = nn.Sequential(
-            nn.Dropout(0.5),
-            nn.Linear(256 * 4 * 4, 512),
-            nn.ReLU(inplace=True),
-            nn.Dropout(0.5),
-            nn.Linear(512, num_classes)
-        )
-        
-    def forward(self, x):
-        x = self.features(x)
-        x = torch.flatten(x, 1)
-        x = self.classifier(x)
-        return x
+try:
+    from .models.terrain_cnn import TerrainCNN, MobileNetV2Classifier, load_model
+except ImportError:
+    # Fallback for when running as script
+    from terrain_locomotion.perception.models.terrain_cnn import TerrainCNN, MobileNetV2Classifier, load_model
 
 class TerrainClassifierNode(Node):
+    """ROS2 node for terrain classification using CNN or feature-based methods.
+    
+    This node subscribes to camera images and classifies terrain into four
+    categories: flat, slope, rubble, and stairs. It can operate in two modes:
+    1. CNN mode: Uses trained neural network (when model is available)
+    2. Demo mode: Uses feature-based heuristics (no model required)
+    """
+    
     def __init__(self):
         super().__init__('terrain_classifier')
         
@@ -64,9 +38,42 @@ class TerrainClassifierNode(Node):
         self.classes = ['flat', 'slope', 'rubble', 'stairs']
         self.class_to_idx = {cls: idx for idx, cls in enumerate(self.classes)}
         
-        # Initialize model
-        self.model = TerrainCNN(num_classes=len(self.classes))
-        self.model.eval()  # Set to evaluation mode
+        # Parameters
+        self.declare_parameter('confidence_threshold', 0.8)
+        self.declare_parameter('model_path', '')
+        self.declare_parameter('model_type', 'custom')  # 'custom' or 'mobilenet'
+        self.declare_parameter('use_demo_mode', True)  # Use feature-based if no model
+        
+        model_path = self.get_parameter('model_path').value
+        model_type = self.get_parameter('model_type').value
+        use_demo_mode = self.get_parameter('use_demo_mode').value
+        
+        # Try to load model
+        self.use_cnn = False
+        self.model = None
+        
+        if model_path and os.path.exists(model_path):
+            try:
+                self.model = load_model(model_path, model_type=model_type, num_classes=len(self.classes))
+                self.use_cnn = True
+                self.get_logger().info(f'Loaded {model_type} model from {model_path}')
+            except Exception as e:
+                self.get_logger().warn(f'Could not load model: {e}')
+                if not use_demo_mode:
+                    raise
+        else:
+            # Initialize untrained model for demonstration
+            if model_type == 'mobilenet':
+                self.model = MobileNetV2Classifier(num_classes=len(self.classes), pretrained=False)
+            else:
+                self.model = TerrainCNN(num_classes=len(self.classes))
+            self.model.eval()
+            
+            if use_demo_mode:
+                self.get_logger().info('Running in DEMO MODE with feature-based classification')
+            else:
+                self.get_logger().warn('No model provided, using random weights')
+                self.use_cnn = True
         
         # Image preprocessing
         self.transform = transforms.Compose([
@@ -101,22 +108,6 @@ class TerrainClassifierNode(Node):
             '/terrain/annotated_image',
             10
         )
-        
-        # Parameters
-        self.declare_parameter('confidence_threshold', 0.8)
-        self.declare_parameter('model_path', '')
-        
-        # Load pretrained model if available
-        model_path = self.get_parameter('model_path').value
-        if model_path:
-            try:
-                self.model.load_state_dict(torch.load(model_path, map_location='cpu'))
-                self.get_logger().info(f'Loaded model from {model_path}')
-            except Exception as e:
-                self.get_logger().warn(f'Could not load model: {e}')
-                self.get_logger().info('Using random weights for demonstration')
-        else:
-            self.get_logger().info('No model path provided, using random weights for demonstration')
         
         self.get_logger().info('Terrain Classifier Node initialized')
     
@@ -155,30 +146,113 @@ class TerrainClassifierNode(Node):
             self.get_logger().error(f'Error processing image: {str(e)}')
     
     def classify_terrain(self, cv_image):
-        """Classify terrain type from image"""
+        """Classify terrain type from image using CNN or feature-based method.
+        
+        Args:
+            cv_image: OpenCV image (BGR format)
+            
+        Returns:
+            tuple: (terrain_class, confidence_score)
+        """
         try:
-            # Convert BGR to RGB
-            rgb_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
-            pil_image = PILImage.fromarray(rgb_image)
-            
-            # Preprocess image
-            input_tensor = self.transform(pil_image).unsqueeze(0)
-            
-            # Run inference
-            with torch.no_grad():
-                outputs = self.model(input_tensor)
-                probabilities = torch.softmax(outputs, dim=1)
-                confidence, predicted_idx = torch.max(probabilities, 1)
-                
-                predicted_class = self.classes[predicted_idx.item()]
-                confidence_score = confidence.item()
-                
-                return predicted_class, confidence_score
-                
+            if self.use_cnn:
+                return self._classify_with_cnn(cv_image)
+            else:
+                return self._classify_with_features(cv_image)
         except Exception as e:
             self.get_logger().error(f'Error in terrain classification: {str(e)}')
-            # Return default classification
             return 'flat', 0.5
+    
+    def _classify_with_cnn(self, cv_image):
+        """Classify using CNN model."""
+        # Convert BGR to RGB
+        rgb_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
+        pil_image = PILImage.fromarray(rgb_image)
+        
+        # Preprocess image
+        input_tensor = self.transform(pil_image).unsqueeze(0)
+        
+        # Run inference
+        with torch.no_grad():
+            outputs = self.model(input_tensor)
+            probabilities = torch.softmax(outputs, dim=1)
+            confidence, predicted_idx = torch.max(probabilities, 1)
+            
+            predicted_class = self.classes[predicted_idx.item()]
+            confidence_score = confidence.item()
+            
+            return predicted_class, confidence_score
+    
+    def _classify_with_features(self, cv_image):
+        """Classify using hand-crafted features (demo mode without trained model).
+        
+        This method analyzes image features like color, texture, and edges to
+        classify terrain. It's designed to work without a trained model.
+        """
+        # Resize for consistent feature extraction
+        image = cv2.resize(cv_image, (224, 224))
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        
+        # Feature 1: Color variance (rubble has high variance)
+        color_variance = np.std(image)
+        
+        # Feature 2: Texture complexity (edges)
+        edges = cv2.Canny(gray, 50, 150)
+        edge_density = np.sum(edges > 0) / edges.size
+        
+        # Feature 3: Gradient orientation (slopes have directional gradients)
+        sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
+        sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+        gradient_angle = np.arctan2(sobely, sobelx)
+        gradient_std = np.std(gradient_angle)
+        
+        # Feature 4: Vertical edges (stairs have strong vertical patterns)
+        vertical_edges = np.sum(np.abs(sobelx) > 50)
+        horizontal_edges = np.sum(np.abs(sobely) > 50)
+        
+        # Feature 5: Color uniformity (flat terrain is more uniform)
+        h, s, v = cv2.split(hsv)
+        saturation_mean = np.mean(s)
+        value_variance = np.std(v)
+        
+        # Heuristic classification based on features
+        scores = {
+            'flat': 0.0,
+            'slope': 0.0,
+            'rubble': 0.0,
+            'stairs': 0.0
+        }
+        
+        # Flat: Low variance, low edge density, uniform color
+        if color_variance < 30 and edge_density < 0.15 and value_variance < 40:
+            scores['flat'] = 0.8 + (1 - edge_density) * 0.2
+        
+        # Slope: Directional gradients, moderate variance
+        if gradient_std > 0.5 and color_variance > 20:
+            slope_score = min(gradient_std / 1.5, 1.0) * 0.6
+            scores['slope'] = slope_score + 0.3
+        
+        # Rubble: High variance, high edge density, irregular patterns
+        if color_variance > 35 and edge_density > 0.2:
+            rubble_score = min(color_variance / 60, 1.0) * 0.5
+            rubble_score += min(edge_density * 2, 0.5)
+            scores['rubble'] = rubble_score
+        
+        # Stairs: Strong horizontal/vertical patterns
+        if vertical_edges > 1000 and horizontal_edges > 800:
+            pattern_score = min((vertical_edges + horizontal_edges) / 5000, 1.0)
+            scores['stairs'] = pattern_score * 0.7 + 0.3
+        
+        # Ensure at least flat terrain has some score
+        if max(scores.values()) < 0.3:
+            scores['flat'] = 0.6
+        
+        # Get prediction
+        predicted_class = max(scores, key=scores.get)
+        confidence = scores[predicted_class]
+        
+        return predicted_class, confidence
     
     def create_annotated_image(self, image, terrain_class, confidence):
         """Create image with terrain classification overlay"""
