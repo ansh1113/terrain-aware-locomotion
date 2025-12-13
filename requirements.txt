@@ -1,0 +1,27 @@
+# Python dependencies for terrain-aware locomotion
+
+# Core dependencies
+numpy>=1.21.0
+opencv-python>=4.5.0
+scipy>=1.7.0
+PyYAML>=5.4.0
+transforms3d>=0.3.1
+
+# Deep learning
+torch>=1.9.0
+torchvision>=0.10.0
+
+# ROS2 dependencies (typically installed via apt)
+# These are listed for reference but should be installed via rosdep
+# - rclpy
+# - sensor_msgs
+# - geometry_msgs
+# - std_msgs
+# - cv_bridge
+# - tf2_ros
+
+# Development dependencies
+pytest>=6.2.0
+pytest-cov>=2.12.0
+flake8>=3.9.0
+black>=21.6b0

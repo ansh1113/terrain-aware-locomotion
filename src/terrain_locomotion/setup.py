@@ -7,7 +7,13 @@ package_name = 'terrain_locomotion'
 setup(
     name=package_name,
     version='0.0.1',
-    packages=[package_name, f'{package_name}.perception', f'{package_name}.planning', f'{package_name}.control'],
+    packages=[
+        package_name,
+        f'{package_name}.perception',
+        f'{package_name}.perception.models',
+        f'{package_name}.planning',
+        f'{package_name}.control'
+    ],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -29,6 +35,7 @@ setup(
             'elevation_mapper = terrain_locomotion.perception.elevation_mapper:main',
             'footstep_planner = terrain_locomotion.planning.footstep_planner:main',
             'gait_controller = terrain_locomotion.control.gait_controller:main',
+            'safety_monitor = terrain_locomotion.control.safety_monitor:main',
             'demo_pipeline = terrain_locomotion.demo_pipeline:main',
         ],
     },
