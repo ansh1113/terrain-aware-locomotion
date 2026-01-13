@@ -4,7 +4,7 @@ Launches Gazebo simulation with robot and controllers.
 """
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, RegisterEventHandler, TimerAction
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, Command
 from launch_ros.actions import Node
@@ -23,7 +23,7 @@ def generate_launch_description():
     # Launch arguments
     world_arg = DeclareLaunchArgument(
         'world',
-        default_value='terrain_world.world',
+        default_value='comprehensive_terrain.world',
         description='World file to load'
     )
     
@@ -55,7 +55,8 @@ def generate_launch_description():
                 LaunchConfiguration('world')
             ]),
             'gui': LaunchConfiguration('gui'),
-            'verbose': 'false'
+            'verbose': 'false',
+            'pause': 'false'
         }.items()
     )
     
@@ -90,13 +91,16 @@ def generate_launch_description():
         arguments=[
             '-topic', 'robot_description',
             '-entity', 'anymal',
-            '-x', '2.0',
+            '-x', '0.0',
             '-y', '0.0',
-            '-z', '0.5'
+            '-z', '0.7',  # Spawn higher to avoid ground collision on spawn
+            '-R', '0.0',
+            '-P', '0.0',
+            '-Y', '0.0'
         ]
     )
     
-    # Joint state broadcaster
+    # Joint state broadcaster spawner
     joint_state_broadcaster = Node(
         package='controller_manager',
         executable='spawner',
@@ -109,7 +113,7 @@ def generate_launch_description():
         ]
     )
     
-    # Joint trajectory controller
+    # Joint trajectory controller spawner
     joint_trajectory_controller = Node(
         package='controller_manager',
         executable='spawner',
@@ -122,7 +126,18 @@ def generate_launch_description():
         ]
     )
     
-    # Chain controller spawners after robot spawns
+    # Simple walking demo node (started after controllers are ready)
+    walking_demo = Node(
+        package='terrain_locomotion',
+        executable='simple_walk_demo',
+        name='simple_walk_demo',
+        output='screen',
+        parameters=[{
+            'use_sim_time': LaunchConfiguration('use_sim_time')
+        }]
+    )
+    
+    # Chain actions: spawn robot → load joint state broadcaster → load trajectory controller → start walking demo
     load_joint_state_broadcaster = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=spawn_robot,
@@ -137,6 +152,17 @@ def generate_launch_description():
         )
     )
     
+    # Start walking demo after a delay to ensure controllers are ready
+    start_walking_demo = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=joint_trajectory_controller,
+            on_exit=[TimerAction(
+                period=3.0,  # Wait 3 seconds after controller loads
+                actions=[walking_demo]
+            )]
+        )
+    )
+    
     return LaunchDescription([
         world_arg,
         use_sim_time_arg,
@@ -145,5 +171,6 @@ def generate_launch_description():
         robot_state_publisher,
         spawn_robot,
         load_joint_state_broadcaster,
-        load_joint_trajectory_controller
+        load_joint_trajectory_controller,
+        start_walking_demo
     ])
