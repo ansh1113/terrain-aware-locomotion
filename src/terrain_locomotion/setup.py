@@ -37,6 +37,7 @@ setup(
             'gait_controller = terrain_locomotion.control.gait_controller:main',
             'safety_monitor = terrain_locomotion.control.safety_monitor:main',
             'demo_pipeline = terrain_locomotion.demo_pipeline:main',
+            'simple_walk_demo = terrain_locomotion.simple_walk_demo:main',
         ],
     },
 )
